@@ -1,0 +1,30 @@
+carrier:
+  id: "demo-carrier"
+  name: "Demo Insurance Co."
+  supported_states: ["CA", "TX", "NY", "FL", "IL"]
+
+runtime:
+  max_objection_loops: 2
+  max_verification_attempts: 2
+  after_hours_start: "18:00"
+  after_hours_end: "08:00"
+  max_agent_tool_rounds: 4
+
+llm:
+  # Default to mock so tests/CLI work without credentials.
+  # Switch to "azure" after setting AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT.
+  provider: "mock"
+  api_key_env: "AZURE_OPENAI_API_KEY"
+  endpoint_env: "AZURE_OPENAI_ENDPOINT"
+  api_version: "2024-10-21"
+  deployment: "gpt-4o-mini"
+  deployment_capable: "gpt-4o-mini"
+  temperature: 0.2
+  max_tokens: 1200
+
+paths:
+  catalog_dir: "sales_ivr/catalog/products"
+  compliance_dir: "sales_ivr/compliance/disclosures"
+  objections_dir: "sales_ivr/knowledge/objections"
+  fixtures_dir: "sales_ivr/fixtures/sessions"
+  mock_crm_path: "sales_ivr/data/mock_crm.json"
