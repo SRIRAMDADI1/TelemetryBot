@@ -22,7 +22,7 @@ def tool_specs() -> list[dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "lookup_crm",
-                "description": "Look up a customer in the mock CRM by phone number.",
+                "description": "Look up a customer in the CRM by phone number.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -53,16 +53,27 @@ def tool_specs() -> list[dict[str, Any]]:
             "type": "function",
             "function": {
                 "name": "calculate_premium",
-                "description": "Calculate a deterministic premium for a product and tier.",
+                "description": (
+                    "Calculate a deterministic premium for a product and tier. Returns the "
+                    "premium plus a per-attribute rating breakdown you can use to explain "
+                    "the price or answer objections."
+                ),
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "product_id": {"type": "string"},
                         "tier_id": {"type": "string"},
-                        "factors": {
+                        "rating_attributes": {
                             "type": "object",
                             "additionalProperties": {"type": "number"},
-                            "description": "Risk multipliers e.g. driver_age, vehicle_year, annual_mileage",
+                            "description": (
+                                "Real-world values you gathered from the caller, keyed by the "
+                                "product's required_factors. Pass actual measurements, not "
+                                "multipliers: driver_age 40 means 40 years old, vehicle_year "
+                                "2019 means a 2019 model, annual_mileage 9000 means 9,000 miles "
+                                "a year. Pricing converts these to multipliers itself. Omit "
+                                "anything the caller did not tell you rather than guessing."
+                            ),
                         },
                     },
                     "required": ["product_id", "tier_id"],
@@ -142,20 +153,15 @@ def _list_products(args: dict[str, Any]) -> str:
 
 def _calculate_premium(args: dict[str, Any]) -> str:
     products = list(get_catalog())
-    factors = args.get("factors") or {}
-    monthly, annual, summary = ENGINE.calculate_for_product_id(
+    # "factors" is the older argument name; accept it so a model using it still gets priced.
+    attributes = args.get("rating_attributes") or args.get("factors") or {}
+    breakdown = ENGINE.calculate_for_product_id(
         products,
         args["product_id"],
         args["tier_id"],
-        {k: float(v) for k, v in factors.items()},
+        attributes,
     )
-    return json.dumps(
-        {
-            "quote_amount_monthly": monthly,
-            "quote_amount_annual": annual,
-            "coverage_summary": summary,
-        }
-    )
+    return json.dumps(breakdown.as_tool_payload())
 
 
 def _load_compliance(args: dict[str, Any]) -> str:

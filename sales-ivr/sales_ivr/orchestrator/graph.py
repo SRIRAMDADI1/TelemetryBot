@@ -90,5 +90,25 @@ def compile_graph():
 
 
 def run_session(state: IVRState):
+    """Run the agent graph, or return input unchanged when Azure LLM is unavailable."""
+
+    from sales_ivr.llm.client import (
+        azure_llm_enabled,
+        is_deployment_unavailable_error,
+        mark_deployment_unavailable,
+    )
+
+    if not azure_llm_enabled():
+        # Zero mock processing: echo the input state as the output.
+        return state
     app = compile_graph()
-    return app.invoke(state)
+    try:
+        return app.invoke(state)
+    except Exception as exc:
+        if is_deployment_unavailable_error(exc):
+            mark_deployment_unavailable(
+                f"Azure OpenAI deployment failed during the pipeline ({type(exc).__name__}: {exc})."
+            )
+            # Return the original input — do not keep a partial/failed graph result.
+            return state
+        raise

@@ -38,22 +38,57 @@ run for future TelemetryBot observability.
    - **Endpoint** (e.g. `https://sales-ivr-openai.openai.azure.com/`)
    - **KEY 1**
 
-### 4. Set environment variables (PowerShell)
+> **The key and endpoint must come from the same resource that owns the deployment.**
+> Foundry can show a deployment as `Succeeded` while your endpoint points at a different
+> resource — Azure then answers every request with `404 DeploymentNotFound` and this app
+> falls back to passthrough. Foundry projects often create their own `AIServices` resource
+> (e.g. `https://<name>.cognitiveservices.azure.com/`) separate from any Azure OpenAI
+> resource you made earlier. To see which resource actually holds your deployment:
+>
+> ```powershell
+> az cognitiveservices account list -o table
+> az cognitiveservices account deployment list -n <resource-name> -g <resource-group> -o table
+> ```
+>
+> Use the endpoint and keys of whichever resource lists your deployment.
+
+Only the resource root belongs in `AZURE_OPENAI_ENDPOINT`. Do not paste the full target URI
+shown on a Foundry deployment page — the SDK appends
+`/openai/deployments/<name>/chat/completions` itself, so a full URL produces a 404.
+
+### 4. Store credentials once (no PowerShell each time)
+
+**Option A — `.env` (recommended)**
+
+```powershell
+cd sales-ivr
+copy .env.example .env
+# edit .env and set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT
+```
+
+**Option B — `config.local.yaml` (hardcoded in a local file)**
+
+```powershell
+copy config.local.yaml.example config.local.yaml
+# edit config.local.yaml: set llm.api_key, llm.endpoint, llm.provider: azure
+```
+
+Both files are gitignored. Do **not** put real keys in `config.yaml`.
+
+Shell env still works if you prefer:
 
 ```powershell
 $env:AZURE_OPENAI_API_KEY = "<KEY 1>"
 $env:AZURE_OPENAI_ENDPOINT = "https://your-resource-name.openai.azure.com/"
 ```
 
-Then in `sales-ivr/config.yaml` set:
+If using only `.env` (not `config.local.yaml`), keep in `config.yaml`:
 
 ```yaml
 llm:
   provider: "azure"
   deployment: "gpt-4o-mini"   # must match Azure deployment name
 ```
-
-Do **not** commit the API key. Keep it in your shell / `.env` (gitignored).
 
 ### 5. Verify
 
@@ -65,9 +100,11 @@ python -m sales_ivr.cli auto_quote_ca.json
 
 You should see `llm_calls:` with real token counts.
 
-## Offline / CI mode (no Azure)
+## Without Azure credentials
 
-`config.yaml` defaults to `provider: "mock"` so tests run without credentials:
+There is **no mock LLM**. If `provider` is not `azure`, the API key/endpoint are missing,
+or the model **deployment does not exist**, `run_session` returns the **input state unchanged**
+(passthrough). The web chat echoes your answers and explains what to fix.
 
 ```bash
 python -m pytest
@@ -86,6 +123,20 @@ python -m sales_ivr.cli auto_quote_ca.json
 python -m sales_ivr.cli auto_quote_ca.json --json
 python run_batch.py
 ```
+
+## Web conversation agent
+
+```bash
+sales-ivr-web
+# open http://127.0.0.1:8000
+```
+
+The web agent accepts details in any order, answers open-ended messages, and keeps the
+conversation active after quoting. When the customer requests a quote or changes details and
+asks for a revision, it builds a fresh session JSON and reruns the complete agent pipeline.
+Prior quote revisions remain in the server-side chat session.
+
+Public deploy (**no Docker**): [WEB.md](WEB.md)
 
 ## Architecture
 

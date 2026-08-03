@@ -13,8 +13,11 @@ runtime:
   max_agent_tool_rounds: 4
 
 llm:
-  # Use "azure" with env vars below, or "mock" for offline tests.
+  # Requires Azure OpenAI + real credentials. Otherwise pipeline is passthrough (input=output).
   provider: "azure"
+  # Optional hardcoded credentials (prefer config.local.yaml — gitignored):
+  # api_key: "..."
+  # endpoint: "https://your-resource.openai.azure.com/"
   api_key_env: "AZURE_OPENAI_API_KEY"
   endpoint_env: "AZURE_OPENAI_ENDPOINT"
   api_version: "2024-10-21"
@@ -28,4 +31,4 @@ paths:
   compliance_dir: "sales_ivr/compliance/disclosures"
   objections_dir: "sales_ivr/knowledge/objections"
   fixtures_dir: "sales_ivr/fixtures/sessions"
-  mock_crm_path: "sales_ivr/data/mock_crm.json"
+  crm_path: "sales_ivr/data/crm.json"

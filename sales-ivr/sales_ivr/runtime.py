@@ -7,6 +7,8 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from sales_ivr.catalog.loader import load_catalog
 from sales_ivr.config import AppConfig, InsuranceProduct, load_config, resolve_path
 from sales_ivr.pricing.engine import load_objection_corpus
@@ -18,6 +20,16 @@ def package_root() -> Path:
 
 def project_root() -> Path:
     return package_root().parent
+
+
+def _load_dotenv() -> None:
+    """Load sales-ivr/.env once so keys don't need PowerShell each session."""
+    env_path = project_root() / ".env"
+    if env_path.exists():
+        load_dotenv(env_path, override=False)
+
+
+_load_dotenv()
 
 
 def _discover_config_path() -> Path:
@@ -52,7 +64,7 @@ def get_catalog() -> tuple[InsuranceProduct, ...]:
 @lru_cache(maxsize=1)
 def get_crm() -> dict:
     config = get_config()
-    crm_path = resolve_path(config, config.paths.mock_crm_path, base=project_root())
+    crm_path = resolve_path(config, config.paths.crm_path, base=project_root())
     return json.loads(crm_path.read_text(encoding="utf-8"))
 
 
