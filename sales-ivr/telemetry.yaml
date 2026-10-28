@@ -1,0 +1,6 @@
+# TelemetryBot collector connection for Sales IVR
+collector_url: http://127.0.0.1:8100
+project_id: sales-ivr
+project_slug: sales-ivr
+api_key: dev-sales-ivr-key
+enabled: true

@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  /* Fine film grain that keeps large flat areas from banding. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+html {
+  @apply bg-ink;
+}
+
+body {
+  @apply bg-ink text-paper antialiased min-h-screen;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 12% -12%, rgba(255, 255, 255, 0.07), transparent 70%),
+    radial-gradient(ellipse 70% 45% at 88% -4%, rgba(255, 255, 255, 0.04), transparent 70%),
+    linear-gradient(180deg, #101014 0%, #08080a 42%, #060608 100%);
+  background-attachment: fixed;
+}
+
+/* Grain sits above the gradient wash but below all content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--grain);
+  background-size: 160px 160px;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+*:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 2px;
+}
+
+@layer base {
+  /* Keep in @layer base so utility classes (text-mist / text-paper) can win on nav tabs. */
+  a {
+    @apply text-accent2 hover:text-paper transition-colors;
+  }
+}
+
+@layer components {
+  /* Soft brushed-metal panel: top-lit gradient, hairline rim, no gloss. */
+  .matte {
+    @apply rounded-xl border border-line shadow-matte;
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 38%, rgba(255, 255, 255, 0) 100%),
+      linear-gradient(180deg, #16161a 0%, #101013 100%);
+  }
+
+  .matte-sunk {
+    @apply rounded-xl border border-line;
+    background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(255, 255, 255, 0.02) 100%);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+  }
+
+  .matte-hover {
+    @apply transition-[background-color,box-shadow,border-color] duration-200;
+  }
+  .matte-hover:hover {
+    @apply border-mist/35 shadow-lift;
+  }
+
+  /* Hairline rule that fades at both ends. */
+  .rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+  }
+
+  .btn {
+    @apply inline-flex items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm text-paper
+           shadow-matte transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  }
+  .btn:hover:not(:disabled) {
+    @apply border-mist/45;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  }
+  .btn:active:not(:disabled) {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-ink
+           transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+    background-image: linear-gradient(180deg, #fafafa 0%, #e6e6ea 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.75),
+      0 1px 2px rgba(0, 0, 0, 0.45);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-image: linear-gradient(180deg, #ffffff 0%, #f0f0f4 100%);
+  }
+  .btn-primary:active:not(:disabled) {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Diagonal hatch stands in for red in a monochrome palette. */
+  .hatch {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.95) 0px,
+      rgba(255, 255, 255, 0.95) 3px,
+      rgba(255, 255, 255, 0.35) 3px,
+      rgba(255, 255, 255, 0.35) 6px
+    );
+  }
+
+  .bar-fill {
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.82));
+  }
+
+  .eyebrow {
+    @apply text-xs uppercase tracking-[0.28em] text-mist;
+  }
+
+  .login-panel {
+    animation: login-rise 0.55s ease-out both;
+  }
+
+  .pulse-ring {
+    animation: pulse-ring 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.38);
+    opacity: 0;
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinning {
+  animation: spin-slow 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinning,
+  .login-panel,
+  .pulse-ring {
+    animation: none;
+  }
+}

@@ -1,0 +1,6 @@
+# TelemetryBot collector connection for ADO Pipeline
+collector_url: http://127.0.0.1:8100
+project_id: ado-pipeline
+project_slug: ado-pipeline
+api_key: dev-ado-pipeline-key
+enabled: true

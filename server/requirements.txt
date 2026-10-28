@@ -1,0 +1,12 @@
+# Runtime deps only. Oryx installs these into antenv during zip deploy.
+# Do NOT add "." here — local package install is unreliable on Oryx; startup.sh
+# adds the extracted app root to PYTHONPATH instead.
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+gunicorn>=22.0.0
+sqlmodel>=0.0.22
+sqlalchemy>=2.0
+pydantic>=2.0
+pydantic-settings>=2.0
+httpx>=0.27.0
+python-dotenv>=1.0.0

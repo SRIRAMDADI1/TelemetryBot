@@ -3,6 +3,14 @@
 Holds the Azure DevOps backlog for agent-building work and (later) the meta-agents
 that implement the Sales IVR agents from those work items.
 
+TelemetryBot registers this folder as the **ADO Pipeline** monitoring tab. Until
+meta-agents exist, the tab stays empty (coverage scan only). Optional demo:
+
+```bash
+pip install -e ../packages/agentelemetry
+python telemetry_smoke.py --demo-seed
+```
+
 Only **agent-building** work is tracked in Azure DevOps (Epics E2-E7). Platform
 foundation (E1) lives in code under `sales-ivr/`.
 

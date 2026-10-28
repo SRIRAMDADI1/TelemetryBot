@@ -26,7 +26,26 @@ htmlcov/
 # Runtime
 reports/
 *.log
+telemetrybot.db
+test_telemetrybot.db
+server/telemetrybot.db
+server/test_telemetrybot.db
+
+# Node
+node_modules/
+dashboard/.next/
+.next/
+
+# Azure zip deploys (built by pack_azure_zip.py — never Compress-Archive)
+telemetrybot-collector-deploy.zip
+telemetrybot-dashboard-deploy.zip
+harborline-deploy.zip
 
 # Secrets
 config.local.yaml
 secrets/
+
+# Local SQLite / build artifacts
+server/smoke_telemetrybot.db
+*.tsbuildinfo
+

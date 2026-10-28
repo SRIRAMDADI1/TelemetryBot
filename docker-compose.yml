@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: telemetry
+      POSTGRES_PASSWORD: telemetry
+      POSTGRES_DB: telemetrybot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telemetry -d telemetrybot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://telemetry:telemetry@postgres:5432/telemetrybot
+      SEED_ON_STARTUP: "true"
+      AUTH_DEV_MODE: "true"
+      COLLECTOR_PUBLIC_URL: http://localhost:8100
+      DASHBOARD_URL: http://localhost:3000
+      DEMO_EMAIL: demo@telemetrybot.dev
+      DEMO_PASSWORD: demo
+    ports:
+      - "8100:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+      args:
+        NEXT_PUBLIC_COLLECTOR_URL: http://localhost:8100
+    environment:
+      COLLECTOR_URL: http://server:8000
+      NEXT_PUBLIC_COLLECTOR_URL: http://localhost:8100
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
+volumes:
+  pgdata:

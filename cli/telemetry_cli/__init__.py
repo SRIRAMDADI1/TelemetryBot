@@ -1,0 +1,1 @@
+"""TelemetryBot CLI package."""

@@ -100,12 +100,15 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 def main() -> None:
+    import os
+
     import uvicorn
 
+    port = int(os.environ.get("PORT", "8000"))
     uvicorn.run(
         "sales_ivr.web.app:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=False,
     )
 

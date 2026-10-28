@@ -2,7 +2,18 @@
 
 Insurance sales IVR platform driven by **real LLM agents** (Azure OpenAI by default),
 with tools for CRM, catalog, pricing, and compliance. Token usage is recorded on every
-run for future TelemetryBot observability.
+run and flushed to **TelemetryBot** when `telemetry.yaml` + collector are available
+(soft-fail if the collector is down).
+
+## TelemetryBot
+
+```powershell
+# From repo root: start collector, then:
+cd sales-ivr
+python -m sales_ivr.cli auto_quote_ca.json
+```
+
+See the monorepo [README](../README.md) for collector/dashboard setup. Config: [`telemetry.yaml`](telemetry.yaml).
 
 ## Azure OpenAI setup (do this once)
 

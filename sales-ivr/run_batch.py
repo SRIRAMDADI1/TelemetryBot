@@ -11,6 +11,7 @@ from sales_ivr.llm import reset_llm_client
 from sales_ivr.models import IVRState
 from sales_ivr.orchestrator import run_session
 from sales_ivr.runtime import clear_resource_cache
+from sales_ivr.telemetry import emit_state_telemetry, telemetry_run
 
 
 def _coerce_state(result: IVRState | dict) -> IVRState:
@@ -19,7 +20,12 @@ def _coerce_state(result: IVRState | dict) -> IVRState:
     return IVRState.model_validate(result)
 
 
-def run_batch(fixtures: list[Path], reports_dir: Path) -> dict:
+def run_batch(
+    fixtures: list[Path],
+    reports_dir: Path,
+    *,
+    experiment: str | None = None,
+) -> dict:
     reports_dir.mkdir(parents=True, exist_ok=True)
     runs = []
     for fixture_path in fixtures:
@@ -27,7 +33,14 @@ def run_batch(fixtures: list[Path], reports_dir: Path) -> dict:
         reset_llm_client()
         session = load_session_fixture(fixture_path)
         started = datetime.now(timezone.utc)
-        result = _coerce_state(run_session(build_initial_state(session)))
+        with telemetry_run(
+            external_id=session.session_id,
+            channel="batch",
+            experiment=experiment,
+            metadata={"fixture": fixture_path.name},
+        ) as tel_run:
+            result = _coerce_state(run_session(build_initial_state(session)))
+            emit_state_telemetry(result, run=tel_run)
         ended = datetime.now(timezone.utc)
         quote_monthly = (
             result.session.quote.quote_amount_monthly if result.session.quote else None
@@ -49,12 +62,14 @@ def run_batch(fixtures: list[Path], reports_dir: Path) -> dict:
                 "total_tokens": sum(u.total_tokens for u in result.llm_usage),
                 "audit_nodes": [e.node.value for e in result.audit_trail],
                 "duration_ms": int((ended - started).total_seconds() * 1000),
+                "experiment": experiment,
             }
         )
 
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "run_count": len(runs),
+        "experiment": experiment,
         "runs": runs,
     }
     out_path = reports_dir / f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
@@ -67,6 +82,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Replay IVR session fixtures")
     parser.add_argument("--config", type=Path, default=Path("config.yaml"))
     parser.add_argument("--count", type=int, default=0, help="Limit fixtures (0 = all)")
+    parser.add_argument(
+        "--experiment",
+        default=None,
+        help="Optional experiment tag for TelemetryBot A/B comparison",
+    )
     args = parser.parse_args()
 
     config_path = args.config
@@ -78,7 +98,7 @@ def main() -> None:
     if args.count > 0:
         fixtures = fixtures[: args.count]
 
-    report = run_batch(fixtures, Path("reports"))
+    report = run_batch(fixtures, Path("reports"), experiment=args.experiment)
     print(json.dumps(report, indent=2))
 
 
